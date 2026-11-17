@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avaliação de Buffets – Casamento</title>
+<style>
+:root{--bg:#faf6f1;--card:#fff;--ink:#2d2a26;--mut:#7a736a;--line:#e8dfd3;--acc:#a8566b;--acc2:#f3e3e7;--ok:#4d7c5a;--err:#b3402f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:20px 16px 8px;text-align:center}
+h1{margin:0;font:600 22px Georgia,serif;color:var(--acc)}
+header p{margin:4px 0 0;color:var(--mut);font-size:14px}
+main{max-width:720px;margin:0 auto;padding:8px 14px 60px}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);border-radius:10px;font:inherit;font-weight:600;color:var(--mut)}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;font:inherit;color:var(--ink)}
+.chip.on{background:var(--acc2);border-color:var(--acc);color:var(--acc);font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px}
+.crit{padding:12px 0;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0}
+.crit .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.crit b{font-weight:600}
+.crit small{display:block;color:var(--mut);font-size:13px}
+.val{font:600 20px Georgia,serif;color:var(--acc);min-width:42px;text-align:right}
+.val.empty{color:#c9c0b4}
+input[type=range]{width:100%;accent-color:var(--acc);margin:8px 0 0}
+textarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
+textarea.code{font:12px ui-monospace,Menlo,monospace;word-break:break-all;min-height:110px}
+.avg{display:flex;justify-content:space-between;align-items:center;background:var(--acc2);border-radius:10px;padding:12px 14px;margin-top:12px}
+.avg span{color:var(--acc);font-weight:600}
+.avg strong{font:700 26px Georgia,serif;color:var(--acc)}
+.btn{display:block;width:100%;margin-top:10px;padding:14px;border:0;border-radius:12px;background:var(--acc);color:#fff;font:600 16px system-ui;text-align:center;text-decoration:none}
+.btn.alt{background:#fff;color:var(--acc);border:1px solid var(--acc)}
+.btn.wa{background:#25a244}
+.btn:disabled{opacity:.45}
+.msg{text-align:center;font-size:14px;min-height:20px;margin-top:8px;color:var(--ok)}
+.msg.err{color:var(--err)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12px}
+tr.final td{font-weight:700;color:var(--acc);border-bottom:0;background:var(--acc2)}
+.rank{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.rank:first-of-type{border-top:0}
+.rank .pos{width:28px;height:28px;border-radius:50%;background:var(--acc2);color:var(--acc);display:grid;place-items:center;font-weight:700}
+.rank.first .pos{background:var(--acc);color:#fff}
+.rank .nm{flex:1;font-weight:600}.rank .nm small{display:block;font-weight:400;color:var(--mut)}
+.rank .sc{font:700 22px Georgia,serif;color:var(--acc)}
+.cm{font-size:13px;color:var(--mut);padding:4px 0}
+.note{font-size:13px;color:var(--mut);margin:8px 0 0}
+.scroll{overflow-x:auto}
+.imp{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.imp:first-of-type{border-top:0}
+.imp button{border:0;background:none;color:var(--err);font:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1>Avaliação de Buffets</h1>
+  <p>Degustações do casamento · notas de 0 a 10</p>
+</header>
+<main>
+  <div class="tabs">
+    <button id="tabA" class="on">Avaliar</button>
+    <button id="tabR">Resultados</button>
+  </div>
+  <div id="view"></div>
+</main>
+
+<script>
+const PEOPLE=["Rhian","Debora","Nico","Danielle","Nelsir"];
+const BUFFETS=["Zaire","Sra Cozinha","Taise"];
+const CRITS=[
+ {id:"sabor",n:"Sabor",d:"Tempero, ponto da carne, sabor geral dos pratos"},
+ {id:"apres",n:"Apresentação",d:"Visual dos pratos, montagem e capricho"},
+ {id:"variedade",n:"Variedade do cardápio",d:"Opções, equilíbrio e criatividade do menu"},
+ {id:"qualidade",n:"Qualidade e temperatura",d:"Frescor dos ingredientes, comida no ponto e na temperatura certa"},
+ {id:"custo",n:"Custo-benefício",d:"Vale o que é cobrado pelo que foi servido?"}
+];
+const PREFIX="BUF1.";
+let tab="A", me=null, buf=BUFFETS[0], code="", msg="", msgErr=false;
+let mine={};      // buffet -> {scores:{id:n}, comment}
+let imported={};  // person -> {scores:{buffet:{id:n}}, comments:{buffet:txt}}
+
+const store={
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(_){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}
+};
+const avg=s=>{const v=CRITS.map(c=>s&&s[c.id]).filter(x=>typeof x==="number");return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
+const complete=s=>CRITS.every(c=>s&&typeof s[c.id]==="number");
+const f=x=>x==null?"–":x.toFixed(1).replace(".",",");
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function loadMine(){mine=(me&&store.get("buf_mine_"+me))||{};}
+function saveMine(){if(me)store.set("buf_mine_"+me,mine);}
+function draft(){if(!mine[buf])mine[buf]={scores:{},comment:""};return mine[buf];}
+
+// ---- código ----
+function encode(){
+  const o={p:PEOPLE.indexOf(me),s:BUFFETS.map(b=>CRITS.map(c=>mine[b].scores[c.id])),c:BUFFETS.map(b=>mine[b].comment||"")};
+  return PREFIX+btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decode(str){
+  let b=str.slice(PREFIX.length).replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";
+  const o=JSON.parse(decodeURIComponent(escape(atob(b))));
+  if(!(o.p>=0&&o.p<PEOPLE.length)||o.s.length!==BUFFETS.length)throw 0;
+  const scores={},comments={};
+  BUFFETS.forEach((bf,i)=>{scores[bf]={};CRITS.forEach((c,j)=>{const v=Number(o.s[i][j]);if(!(v>=0&&v<=10))throw 0;scores[bf][c.id]=v});comments[bf]=String(o.c[i]||"").slice(0,500)});
+  return {person:PEOPLE[o.p],scores,comments};
+}
+
+// ---- telas ----
+function render(){
+  document.getElementById("tabA").className=tab==="A"?"on":"";
+  document.getElementById("tabR").className=tab==="R"?"on":"";
+  document.getElementById("view").innerHTML=tab==="A"?viewEval():viewResults();
+  bind();
+}
+function setMsg(t,err){msg=t;msgErr=!!err;const m=document.getElementById("msg");if(m){m.textContent=t;m.className="msg"+(err?" err":"")}}
+
+function viewEval(){
+  let h=`<div class="card"><p class="lbl">Quem está avaliando?</p><div class="chips">`;
+  PEOPLE.forEach(p=>{h+=`<button class="chip ${p===me?"on":""}" data-p="${p}">${p}</button>`});
+  h+=`</div></div>`;
+  if(!me)return h+`<p class="note" style="text-align:center">Escolha seu nome para começar.</p>`;
+  h+=`<div class="card"><p class="lbl">Buffet</p><div class="chips">`;
+  BUFFETS.forEach(b=>{h+=`<button class="chip ${b===buf?"on":""}" data-b="${b}">${b}${complete((mine[b]||{}).scores)?'<span class="dot"></span>':""}</button>`});
+  h+=`</div></div>`;
+  const d=draft();
+  h+=`<div class="card"><p class="lbl">${esc(me)} avaliando ${esc(buf)}</p>`;
+  CRITS.forEach(c=>{
+    const v=d.scores[c.id];
+    h+=`<div class="crit"><div class="top"><div><b>${c.n}</b><small>${c.d}</small></div><div class="val ${v==null?"empty":""}" id="v-${c.id}">${v==null?"–":f(v)}</div></div>
+    <input type="range" min="0" max="10" step="0.5" value="${v==null?5:v}" data-c="${c.id}"></div>`;
+  });
+  h+=`<div class="avg"><span>Sua média para ${esc(buf)}</span><strong id="mAvg">${f(avg(d.scores))}</strong></div>
+  <p class="lbl" style="margin-top:14px">Comentário (opcional)</p>
+  <textarea id="cm" placeholder="Pontos fortes, fracos, prato favorito...">${esc(d.comment)}</textarea>
+  <p class="note">Suas notas ficam salvas neste aparelho enquanto você avalia.</p></div>`;
+  const done=BUFFETS.filter(b=>complete((mine[b]||{}).scores)).length;
+  h+=`<div class="card"><p class="lbl">Enviar minhas notas</p>
+  <p class="note" style="margin:0 0 4px">Buffets avaliados: ${done} de ${BUFFETS.length}. Quando terminar os 3, gere seu código e mande para quem está organizando.</p>
+  <button class="btn" id="gen" ${done<BUFFETS.length?"disabled":""}>Gerar meu código</button><div class="msg ${msgErr?"err":""}" id="msg">${msg}</div>`;
+  if(code){
+    h+=`<textarea class="code" id="codeBox" readonly>${code}</textarea>
+    <button class="btn alt" id="copy">Copiar código</button>
+    <a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Minhas notas dos buffets: "+code)}">Enviar por WhatsApp</a>`;
+  }
+  return h+`</div>`;
+}
+
+function stats(){
+  const people=PEOPLE.filter(p=>imported[p]);
+  const pb=(p,b)=>avg(imported[p]&&imported[p].scores[b]);
+  const bufAvgs={};
+  BUFFETS.forEach(b=>{const a=people.map(p=>pb(p,b)).filter(x=>x!=null);bufAvgs[b]=a.length?a.reduce((x,y)=>x+y,0)/a.length:null});
+  return {people,pb,bufAvgs};
+}
+
+function viewResults(){
+  const {people,pb,bufAvgs}=stats();
+  let h=`<div class="card"><p class="lbl">Receber notas</p>
+  <p class="note" style="margin:0 0 8px">Cole aqui os códigos que as pessoas enviaram. Pode colar vários de uma vez, mesmo com o texto da mensagem junto.</p>
+  <textarea id="paste" placeholder="Cole os códigos aqui..."></textarea>
+  <button class="btn" id="add">Adicionar notas</button><div class="msg ${msgErr?"err":""}" id="msg">${msg}</div>
+  <p class="lbl" style="margin-top:12px">Já recebidas (${people.length} de ${PEOPLE.length})</p>`;
+  PEOPLE.forEach(p=>{
+    h+=`<div class="imp"><span>${p} ${imported[p]?'<span class="dot"></span>':'<span style="color:var(--mut)">· falta enviar</span>'}</span>${imported[p]?`<button data-rm="${p}">remover</button>`:""}</div>`;
+  });
+  h+=`</div>`;
+  if(!people.length)return h;
+  h+=`<div class="card"><p class="lbl">Média de cada pessoa por buffet</p><div class="scroll"><table><tr><th></th>${BUFFETS.map(b=>`<th>${b}</th>`).join("")}</tr>`;
+  PEOPLE.forEach(p=>{h+=`<tr><td>${p}</td>${BUFFETS.map(b=>`<td>${f(pb(p,b))}</td>`).join("")}</tr>`});
+  h+=`<tr class="final"><td>Média final</td>${BUFFETS.map(b=>`<td>${f(bufAvgs[b])}</td>`).join("")}</tr></table></div></div>`;
+  const rk=BUFFETS.slice().sort((a,b)=>(bufAvgs[b]??-1)-(bufAvgs[a]??-1));
+  h+=`<div class="card"><p class="lbl">Ranking geral</p>`;
+  rk.forEach((b,i)=>{h+=`<div class="rank ${i===0?"first":""}"><div class="pos">${i+1}</div><div class="nm">${b}<small>${people.length} avaliações</small></div><div class="sc">${f(bufAvgs[b])}</div></div>`});
+  h+=`</div><div class="card"><p class="lbl">Média por critério</p><div class="scroll"><table><tr><th></th>${BUFFETS.map(b=>`<th>${b}</th>`).join("")}</tr>`;
+  CRITS.forEach(c=>{
+    h+=`<tr><td>${c.n}</td>`+BUFFETS.map(b=>{const v=people.map(p=>imported[p].scores[b][c.id]);return `<td>${f(v.reduce((x,y)=>x+y,0)/v.length)}</td>`}).join("")+`</tr>`;
+  });
+  h+=`</table></div></div>`;
+  const cms=[];
+  BUFFETS.forEach(b=>people.forEach(p=>{const t=imported[p].comments[b];if(t)cms.push(`<div class="cm"><b>${b} · ${p}:</b> ${esc(t)}</div>`)}));
+  if(cms.length)h+=`<div class="card"><p class="lbl">Comentários</p>${cms.join("")}</div>`;
+  return h;
+}
+
+function bind(){
+  document.querySelectorAll("[data-p]").forEach(e=>e.onclick=()=>{me=e.dataset.p;store.set("buf_me",me);loadMine();code="";setMsg("");render()});
+  document.querySelectorAll("[data-b]").forEach(e=>e.onclick=()=>{buf=e.dataset.b;render()});
+  document.querySelectorAll("input[type=range]").forEach(e=>e.oninput=()=>{
+    const id=e.dataset.c,d=draft();d.scores[id]=parseFloat(e.value);saveMine();code="";
+    const v=document.getElementById("v-"+id);v.textContent=f(d.scores[id]);v.classList.remove("empty");
+    document.getElementById("mAvg").textContent=f(avg(d.scores));
+  });
+  const cm=document.getElementById("cm");if(cm)cm.oninput=()=>{draft().comment=cm.value;saveMine();code=""};
+  const g=document.getElementById("gen");if(g)g.onclick=()=>{
+    if(!BUFFETS.every(b=>complete((mine[b]||{}).scores))){setMsg("Faltam notas em algum buffet.",true);return}
+    code=encode();setMsg("Pronto! Copie o código ou envie pelo WhatsApp.");render();
+  };
+  const cp=document.getElementById("copy");if(cp)cp.onclick=async()=>{
+    try{await navigator.clipboard.writeText(code);setMsg("Código copiado!")}
+    catch(_){const b=document.getElementById("codeBox");b.select();b.setSelectionRange(0,99999);setMsg("Selecionado. Use 'Copiar' do seu celular.")}
+  };
+  const ad=document.getElementById("add");if(ad)ad.onclick=()=>{
+    const txt=document.getElementById("paste").value;
+    const found=txt.match(/BUF1\.[A-Za-z0-9_-]+/g)||[];
+    let ok=0,bad=0;
+    found.forEach(c=>{try{const r=decode(c);imported[r.person]={scores:r.scores,comments:r.comments};ok++}catch(_){bad++}});
+    store.set("buf_imp",imported);
+    if(!found.length)setMsg("Nenhum código encontrado no texto.",true);
+    else setMsg(ok+" recebido(s)"+(bad?` · ${bad} inválido(s)`:"")+".",bad>0&&!ok);
+    render();
+  };
+  document.querySelectorAll("[data-rm]").forEach(e=>e.onclick=()=>{delete imported[e.dataset.rm];store.set("buf_imp",imported);setMsg("");render()});
+}
+
+(function init(){
+  const m=store.get("buf_me");if(PEOPLE.includes(m))me=m;
+  imported=store.get("buf_imp")||{};
+  loadMine();
+  document.getElementById("tabA").onclick=()=>{tab="A";setMsg("");render()};
+  document.getElementById("tabR").onclick=()=>{tab="R";setMsg("");render()};
+  render();
+})();
+</script>
+</body>
+</html>
